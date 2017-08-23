@@ -2,23 +2,21 @@
 import requests
 from bs4 import BeautifulSoup
 
-#Function to print or send out alert on a fully built call
+#Function to alert on a fully built interesting call
 def inciAlert( fullCall ):
   fullCall = fullCall + " (" + str(numUnits) + ") @ " + prevDate
   coolCall = ['Fire', 'CPTR', 'Sdge']
   if any(word in fullCall for word in coolCall):
     print fullCall
+  elif numUnits > 9:
+    print fullCall
   return
 
-# Dump the HTML
+# Dump the HTML, turn in to BeautifulSoup object, find and save the table
 print "Starting...\n"
 r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
 #r = requests.get('http://localhost/sdfd.html')
-
-# Turn the HTML into a Beautiful Soup object
 soup = BeautifulSoup(r.text, 'html.parser')
-
-# Find the calls table and save it
 table = soup.find(lambda tag: tag.name=='table' and tag.has_attr("id") and tag['id']=="gv1")
 
 # Variables
