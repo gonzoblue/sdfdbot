@@ -10,11 +10,10 @@ def inciAlert( fullCall ):
     print fullCall
   return
 
-print "Starting...\n"
-
 # Dump the HTML
+print "Starting...\n"
 r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
-#r = requests.get('http://10.1.1.242/sdfd.html')
+#r = requests.get('http://localhost/sdfd.html')
 
 # Turn the HTML into a Beautiful Soup object
 soup = BeautifulSoup(r.text, 'html.parser')
@@ -40,7 +39,7 @@ for row in table.findAll("tr"):
     if date != prevDate:
       if prevDate != "none":
         inciAlert(callDesc)
-      callDesc = "[" + type + "] " + unit
+      callDesc = "[" + type + "] " + street + " - " + unit
       numUnits = 1
     else:
       callDesc = callDesc + ", " + unit
