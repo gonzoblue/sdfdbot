@@ -10,6 +10,7 @@ def inciAlert( fullCall ):
 # Dump the HTML
 r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
 #r = requests.get('http://10.1.1.242/sdfd.html')
+
 # Turn the HTML into a Beautiful Soup object
 soup = BeautifulSoup(r.text, 'html.parser')
 
@@ -19,8 +20,6 @@ table = soup.find(lambda tag: tag.name=='table' and tag.has_attr("id") and tag['
 # Variables
 prevDate = "none"
 callDesc = []
-
-
 
 # Run through each row and pick apart the call details
 for row in table.findAll("tr"):
@@ -42,6 +41,7 @@ for row in table.findAll("tr"):
       callDesc = callDesc + " & " + unit
     prevDate = date
 # Alert/print the last call built
+callDesc = callDesc + " @ " + prevDate
 inciAlert(callDesc)
 
 print "\nFinished."
