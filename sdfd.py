@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 
 #Function to print or send out alert on a full call
 def inciAlert( fullCall ):
+  fullCall = fullCall + " @ " + prevDate
   print fullCall
   return
 
@@ -34,14 +35,12 @@ for row in table.findAll("tr"):
 # Build the incident string, adding units each time. If a new incident is found, alert/print the call.
     if date != prevDate:
       if prevDate != "none":
-	callDesc = callDesc + " @ " + prevDate
         inciAlert(callDesc)
       callDesc = "[" + type + "] " + unit
     else:
-      callDesc = callDesc + " & " + unit
+      callDesc = callDesc + ", " + unit
     prevDate = date
 # Alert/print the last call built
-callDesc = callDesc + " @ " + prevDate
 inciAlert(callDesc)
 
 print "\nFinished."
