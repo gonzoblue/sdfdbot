@@ -8,8 +8,8 @@ def inciAlert( fullCall ):
   return
 
 # Dump the HTML
-##r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
-r = requests.get('http://10.1.1.242/sdfd.html')
+r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
+#r = requests.get('http://10.1.1.242/sdfd.html')
 # Turn the HTML into a Beautiful Soup object
 soup = BeautifulSoup(r.text, 'html.parser')
 
