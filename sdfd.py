@@ -2,11 +2,15 @@
 import requests
 from bs4 import BeautifulSoup
 
-#Function to print or send out alert on a full call
+#Function to print or send out alert on a fully built call
 def inciAlert( fullCall ):
-  fullCall = fullCall + " @ " + prevDate
-  print fullCall
+  fullCall = fullCall + " (" + str(numUnits) + ") @ " + prevDate
+  coolCall = ['Fire', 'CPTR', 'Sdge']
+  if any(word in fullCall for word in coolCall):
+    print fullCall
   return
+
+print "Starting...\n"
 
 # Dump the HTML
 r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
@@ -37,8 +41,10 @@ for row in table.findAll("tr"):
       if prevDate != "none":
         inciAlert(callDesc)
       callDesc = "[" + type + "] " + unit
+      numUnits = 1
     else:
       callDesc = callDesc + ", " + unit
+      numUnits = numUnits + 1
     prevDate = date
 # Alert/print the last call built
 inciAlert(callDesc)
