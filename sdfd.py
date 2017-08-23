@@ -1,3 +1,9 @@
+#
+#https://github.com/gonzoblue/sdfdbot
+#Automated SDFD incident page scraping and alerting
+#Not official or affiliated with SDFD in any way
+#
+
 # Import modules
 import requests
 from bs4 import BeautifulSoup
