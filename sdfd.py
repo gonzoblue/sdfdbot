@@ -10,15 +10,8 @@ c = db.cursor()
 c.execute('CREATE TABLE IF NOT EXISTS calls (dbid INTEGER PRIMARY KEY, dbcalldate TEXT, dbcalltype TEXT, dbstreet TEXT, dbcross TEXT, dbunitids TEXT, dbnumunits INTEGER, dbupdatetime timestamp, dbalertsent INTEGER DEFAULT 0)')
 db.commit()
 
-#Function to alert on a fully built interesting call
+#Save a fully built call to the database
 def storeCall(fullCall):
-#  coolCall = ['Fire', 'CPTR', 'Sdge']
-#  if any(word in fullCall for word in coolCall):
-#    print fullCall
-#  elif numUnits > 9:
-#    print fullCall
-#  else:
-#    print  "--" + fullCall
   fullCall = fullCall + " (" + str(numUnits) + ") @ " + savedCallDate
   c.execute('SELECT dbid FROM calls WHERE dbcalldate=?', (savedCallDate,))
   callid = c.fetchone()
@@ -34,6 +27,7 @@ def storeCall(fullCall):
     print "+" + str(c.fetchone())
     sendAlert(fullCall)
 
+#Send an alert if the call is the right type
 def sendAlert(fullCall):
   print "Alerting: " + fullCall
   return
