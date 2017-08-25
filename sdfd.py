@@ -1,17 +1,14 @@
-#
 #https://github.com/gonzoblue/sdfdbot
 #Automated SDFD incident page scraping and alerting
 #Not official or affiliated with SDFD in any way
-#
-
-#import requests
-#from bs4 import BeautifulSoup
 
 #Set up the database
 import sqlite3
-callsdb = '/home/pi/sdfdbot/callsdb.sqlite'
-conn = sqlite3.connect(callsdb)
-c = conn.cursor()
+callsdb_file = '/home/pi/sdfdbot/callsdb.sqlite'
+db = sqlite3.connect(callsdb_file)
+c = db.cursor()
+c.execute('CREATE TABLE IF NOT EXISTS calls (dbid INTEGER PRIMARY KEY, dbcalldate TEXT, dbcalltype TEXT, dbstreet TEXT, dbcross TEXT, dbunitids TEXT, dbnumunits INTEGER, dbprocesstime INTEGER, dbalertsent INTEGER)')
+db.commit()
 
 #Function to alert on a fully built interesting call
 def inciAlert( fullCall ):
@@ -23,6 +20,8 @@ def inciAlert( fullCall ):
     print fullCall
   else:
     print  "--" + fullCall
+  c.execute('INSERT INTO calls(dbcalldate, dbcalltype, dbstreet, dbcross, dbunitids, dbnumunits) VALUES(?,?,?,?,?,?)', (date, calltype, street, cross, units, numUnits)) 
+  db.commit()
   return
 
 # Dump the HTML, turn in to BeautifulSoup object, find and save the table
@@ -53,13 +52,16 @@ for row in table.findAll("tr"):
       if prevDate != "none":
         inciAlert(callDesc)
       callDesc = "[" + calltype + "] " + street + " - " + unitid
+      units = unitid
       numUnits = 1
     else:
       callDesc = callDesc + ", " + unitid
+      units = units + ", " + unitid
       numUnits = numUnits + 1
     prevDate = date
 # Alert/print the last call built
 inciAlert(callDesc)
 
+db.close()
 print "\nFinished."
 exit()

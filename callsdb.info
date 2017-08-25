@@ -1,0 +1,10 @@
+dbid 		INTEGER PRIMARY KEY
+dbcalldate 	TEXT
+dbcalltype 	TEXT
+dbstreet 	TEXT
+dbcross		TEXT
+dbunitids	TEXT
+dbnumunits 	INTEGER
+dbprocesstime 	INTEGER
+dbalertsent 	INTEGER
+
