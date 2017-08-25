@@ -11,8 +11,7 @@ c.execute('CREATE TABLE IF NOT EXISTS calls (dbid INTEGER PRIMARY KEY, dbcalldat
 db.commit()
 
 #Function to alert on a fully built interesting call
-def storeCall():
-#  fullCall = fullCall + " (" + str(numUnits) + ") @ " + savedCallDate
+def storeCall(fullCall):
 #  coolCall = ['Fire', 'CPTR', 'Sdge']
 #  if any(word in fullCall for word in coolCall):
 #    print fullCall
@@ -20,6 +19,7 @@ def storeCall():
 #    print fullCall
 #  else:
 #    print  "--" + fullCall
+  fullCall = fullCall + " (" + str(numUnits) + ") @ " + savedCallDate
   c.execute('SELECT dbid FROM calls WHERE dbcalldate=?', (savedCallDate,))
   callid = c.fetchone()
   if callid > 0:
@@ -32,13 +32,18 @@ def storeCall():
     db.commit()
     c.execute('SELECT * FROM calls WHERE dbcalldate=?', (savedCallDate,))
     print "+" + str(c.fetchone())
+    sendAlert(fullCall)
+
+def sendAlert(fullCall):
+  print "Alerting: " + fullCall
+  return
 
 # Dump the HTML, turn in to BeautifulSoup object, find and save the table
 print "Starting...\n"
 import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
-from twitter.api import twitter
+from twitter.api import Twitter
 r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
 #r = requests.get('http://localhost/sdfd.html')
 soup = BeautifulSoup(r.text, 'html.parser')
@@ -60,7 +65,7 @@ for row in table.findAll("tr"):
 # Build the incident string, adding units each time. If a new incident is found, save the call.
     if savedCallDate != date:
       if savedCallDate != "none":
-        storeCall()
+        storeCall(callDesc)
       callDesc = "[" + calltype + "] " + street + " - " + unitid
       units = unitid
       numUnits = 1
@@ -73,7 +78,7 @@ for row in table.findAll("tr"):
     savedCallStreet = street
     savedCallCross = cross
 # Save the last call built
-storeCall()
+storeCall(callDesc)
 
 db.close()
 print "\nFinished."
