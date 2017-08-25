@@ -4,9 +4,14 @@
 #Not official or affiliated with SDFD in any way
 #
 
-# Import modules
-import requests
-from bs4 import BeautifulSoup
+#import requests
+#from bs4 import BeautifulSoup
+
+#Set up the database
+import sqlite3
+callsdb = '/home/pi/sdfdbot/callsdb.sqlite'
+conn = sqlite3.connect(callsdb)
+c = conn.cursor()
 
 #Function to alert on a fully built interesting call
 def inciAlert( fullCall ):
@@ -21,6 +26,8 @@ def inciAlert( fullCall ):
   return
 
 # Dump the HTML, turn in to BeautifulSoup object, find and save the table
+import requests
+from bs4 import BeautifulSoup
 print "Starting...\n"
 r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
 #r = requests.get('http://localhost/sdfd.html')
