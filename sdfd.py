@@ -4,22 +4,57 @@
 
 #Set up the database
 import sqlite3
-callsdb_file = '/home/pi/sdfdbot/callsdb.sqlite'
+callsdb_file = '/home/pi/sdfdbot/stable/callsdb.sqlite'
 db = sqlite3.connect(callsdb_file, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
 c = db.cursor()
 c.execute('CREATE TABLE IF NOT EXISTS calls (dbid INTEGER PRIMARY KEY, dbcalldate TEXT, dbcalltype TEXT, dbstreet TEXT, dbcross TEXT, dbunitids TEXT, dbnumunits INTEGER, dbupdatetime timestamp, dbalertsent INTEGER DEFAULT 0)')
 db.commit()
 
-#Save a fully built call to the database
+#Function to alert on a fully built interesting call
 def storeCall(fullCall):
+#  coolCall = ['Fire', 'CPTR', 'Sdge']
+#  if any(word in fullCall for word in coolCall):
+#    print fullCall
+#  elif numUnits > 9:
+#    print fullCall
+#  else:
+#    print  "--" + fullCall
   fullCall = fullCall + " (" + str(numUnits) + ") @ " + savedCallDate
   c.execute('SELECT dbid FROM calls WHERE dbcalldate=?', (savedCallDate,))
   callid = c.fetchone()
+  now = datetime.now()
   if callid > 0:
-     c.execute('SELECT * FROM calls WHERE dbid=?', (callid))
-     print "=" + str(c.fetchone())
+    callChanged = 0
+    c.execute('SELECT * FROM calls WHERE dbid=?', (callid))
+    oldEntry = c.fetchone()
+    print "=" + str(oldEntry)
+    oldCallType = str(oldEntry[2])
+    oldStreet = str(oldEntry[3])
+    oldCross = str(oldEntry[4])
+    oldNumUnits = oldEntry[6]
+# Check for updates to old calls
+    if oldCallType != savedCallType:
+      c.execute('UPDATE calls SET dbcalltype=? where dbid=?', (savedCallType, callid[0]))
+      db.commit()
+      callChanged=1
+    elif oldStreet != savedCallStreet:
+      c.execute('UPDATE calls SET dbstreet=? where dbid=?', (savedCallStreet, callid[0]))
+      db.commit()
+      callChanged=1
+    elif oldCross != savedCallCross:
+      c.execute('UPDATE calls SET dbcross=? where dbid=?', (savedCallCross, callid[0]))
+      db.commit()
+      callChanged=1
+    elif oldNumUnits != numUnits:
+      c.execute('UPDATE calls SET dbunitids=? where dbid=?', (units, callid[0]))
+      c.execute('UPDATE calls SET dbnumunits=? where dbid=?', (numUnits, callid[0]))
+      callChanged=1
+    if callChanged==1:
+      c.execute('UPDATE calls SET dbupdatetime=? where dbid=?', (now, callid[0]))
+      db.commit()
+      c.execute('SELECT * FROM calls WHERE dbcalldate=?', (savedCallDate,))
+      print "$" + str(c.fetchone())
   else:
-    now = datetime.now()
 #    print "Saving" + savedCallType + " " + savedCallStreet + " as " + savedCallDate + " with timestamp " + now.strftime("%Y-%m-%d %H:%M:%S")
     c.execute('INSERT INTO calls(dbcalldate, dbcalltype, dbstreet, dbcross, dbunitids, dbnumunits, dbupdatetime) VALUES(?,?,?,?,?,?,?)', (savedCallDate, savedCallType, savedCallStreet, savedCallCross, units, numUnits, now))
     db.commit()
@@ -27,17 +62,47 @@ def storeCall(fullCall):
     print "+" + str(c.fetchone())
     sendAlert(fullCall)
 
-#Send an alert if the call is the right type
 def sendAlert(fullCall):
-  print "Alerting: " + fullCall
+  tweet = twitter.Api(consumer_key='1',consumer_secret='2',access_token_key='3',access_token_secret='4')
+  status = tweet.PostUpdate(fullCall)
+  print "Tweet sent: " + status.text
+  coolCall = ['CPTR', 'CRATER', 'Fire', 'Residential', 'Structure Fire', 'Sdge', 'PENTICTON', 'CAPRICORN']
+  if any(word in fullCall for word in coolCall):
+    sendEmail()
+  elif numUnits > 10:
+    sendEmail()
   return
 
-# Dump the HTML, turn in to BeautifulSoup object, find and save the table
-print "Starting...\n"
+def sendEmail():
+  print "Emailing Call Type: [" + savedCallType + "]"
+  fromaddr = "me@mail.com"
+  toaddr = "you@mail.com"
+  msg = MIMEMultipart()
+  msg['From'] = fromaddr
+  msg['To'] = toaddr
+  msg['Subject']= savedCallType + " | " + savedCallStreet + " | " + str(numUnits)
+  body = savedCallType + " | " + units
+  msg.attach(MIMEText(body, 'plain'))
+  email = smtplib.SMTP('mail.com', 587)
+  email.ehlo()
+  email.starttls()
+  email.ehlo()
+  email.login("me@mail.com","mypass")
+  text = msg.as_string()
+  email.sendmail("me@mail.com", "you@mail.com", text)
+  email.quit()
+  return
+
+
+###Main:
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
 import requests
+import twitter
 from datetime import datetime
 from bs4 import BeautifulSoup
-from twitter.api import Twitter
+# Dump the HTML, turn in to BeautifulSoup object, find and save the table
 r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
 #r = requests.get('http://localhost/sdfd.html')
 soup = BeautifulSoup(r.text, 'html.parser')
@@ -57,10 +122,14 @@ for row in table.findAll("tr"):
     cross = str(call[3].get_text().strip())
     unitid = str(call[4].get_text().strip())
 # Build the incident string, adding units each time. If a new incident is found, save the call.
+    if cross == '\x00':
+      cross2 = " "
+    else:
+      cross2 = " & " + cross + " "
     if savedCallDate != date:
       if savedCallDate != "none":
         storeCall(callDesc)
-      callDesc = "[" + calltype + "] " + street + " - " + unitid
+      callDesc = "[" + calltype + "] " + street + cross2 + "- " + unitid
       units = unitid
       numUnits = 1
     else:
