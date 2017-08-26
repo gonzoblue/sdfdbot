@@ -1,9 +1,15 @@
+#!/usr/bin/env python
 #https://github.com/gonzoblue/sdfdbot
 #Automated SDFD incident page scraping and alerting
 #Not official or affiliated with SDFD in any way
+#all imports go at the top
+import sqlite3
+from datetime import datetime
+from bs4 import BeautifulSoup
+from twitter.api import Twitter
+from requests import Session
 
 #Set up the database
-import sqlite3
 callsdb_file = '/home/pi/sdfdbot/callsdb.sqlite'
 db = sqlite3.connect(callsdb_file, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
 c = db.cursor()
@@ -34,11 +40,8 @@ def sendAlert(fullCall):
 
 # Dump the HTML, turn in to BeautifulSoup object, find and save the table
 print "Starting...\n"
-import requests
-from datetime import datetime
-from bs4 import BeautifulSoup
-from twitter.api import Twitter
-r = requests.get('http://apps.sandiego.gov/sdfiredispatch/')
+with Session() as session:
+    r = session.get('http://apps.sandiego.gov/sdfiredispatch/') #context manager closes things neatly
 #r = requests.get('http://localhost/sdfd.html')
 soup = BeautifulSoup(r.text, 'html.parser')
 table = soup.find(lambda tag: tag.name=='table' and tag.has_attr("id") and tag['id']=="gv1")
