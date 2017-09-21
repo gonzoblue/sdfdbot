@@ -1,0 +1,10 @@
+EMAIL_FROM = 'from@domain.com'
+EMAIL_TO = 'to@domain.com'
+EMAIL_PASS = 'password'
+EMAIL_SERVER = 'mail.domain.com'
+TWITTER_CONSUMERKEY = 'c-key'
+TWITTER_CONSUMERSECRET = 'c-secret'
+TWITTER_ACCESSKEY = 'a-key'
+TWITTER_ACCESSSECRET = 'a-secret'
+COOLCALL = ['Commercial Fire', 'Structure Fire', 'Residential Fire', 'Expanded Traffic', 'Rescue']
+DBPATH = "/home/user/sdfdbot"
