@@ -1,6 +1,6 @@
 # sdfdbot
 
-This is a bot to dump the current call log from the SDFD website and parse the calls. 
-It can then send alerts based on the call type and type or number of units assigned.
+This is a bot to dump the current call log from PulsePoint (originally the SDFD incident page) and parse the calls. 
+Any new call it will tweet about, and any call "special" enough will get an email sent.
 
 This is not official or affiliated with SDFD in any way.
