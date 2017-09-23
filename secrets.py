@@ -7,4 +7,4 @@ TWITTER_CONSUMERSECRET = 'c-secret'
 TWITTER_ACCESSKEY = 'a-key'
 TWITTER_ACCESSSECRET = 'a-secret'
 COOLCALL = ['Commercial Fire', 'Structure Fire', 'Residential Fire', 'Expanded Traffic', 'Rescue']
-DBPATH = "/home/user/sdfdbot"
+DBPATH = "/home/user/sdfdbot/"
