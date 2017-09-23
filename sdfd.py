@@ -14,19 +14,19 @@ from bs4 import BeautifulSoup
 import sqlite3
 
 #Set up the database
-callsdb_file = DBPATH + "/callsdb.sqlite"
+callsdb_file = DBPATH + "callsdb.sqlite"
 db = sqlite3.connect(callsdb_file, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
 c = db.cursor()
 c.execute('CREATE TABLE IF NOT EXISTS calls (dbid INTEGER PRIMARY KEY, dbcalldate TEXT, dbcalltype TEXT, dbstreet TEXT, dblat REAL, dblong REAL, dbunitids TEXT, dbnumunits INTEGER, dbupdatetime timestamp)')
 db.commit()
 
 def storeCall():
-	c.execute('SELECT dbid FROM calls WHERE dbcalldate=?', (calldate,)) #search for the call in the DB
+	c.execute('SELECT dbid FROM calls WHERE dbcalldate=?', (calldate,)) #search for the call in the DB by dispatch date/time
 	thisCall = c.fetchone()
 	now = datetime.now()
 	if thisCall > 0:  #if call exists in DB
 		callChanged = 0
-		whatChanged = " "
+		whatChanged = " \nUpdated:"
 		c.execute('SELECT * FROM calls WHERE dbid=?', (thisCall))
 		oldEntry = c.fetchone() # save the old DB entry for comparison
 		print "=" + str(oldEntry)
@@ -39,31 +39,31 @@ def storeCall():
 			c.execute('UPDATE calls SET dbcalltype=? where dbid=?', (calltype, thisCall[0]))
 			db.commit()
 			callChanged=1
-			whatChanged = whatChanged + "Type "
+			whatChanged = whatChanged + "type "
 		if oldAddress != address:
 			c.execute('UPDATE calls SET dbstreet=? where dbid=?', (address, thisCall[0]))
 			db.commit()
 			callChanged=1
-			whatChanged = whatChanged + "Street "
+			whatChanged = whatChanged + "address "
 		if (oldLat != lat) or (oldLong != long):
 			c.execute('UPDATE calls SET dblat=? where dbid=?', (lat, thisCall[0]))
 			c.execute('UPDATE calls SET dblong=? where dbid=?', (long, thisCall[0]))
 			db.commit()
 			callChanged = 1
-			whatChanged = whatChanged + "LatLong "
+			whatChanged = whatChanged + "lat/long "
 		if oldNumUnits != numunits:
 			c.execute('UPDATE calls SET dbunitids=? where dbid=?', (unitids, thisCall[0]))
 			c.execute('UPDATE calls SET dbnumunits=? where dbid=?', (numunits, thisCall[0]))
 			db.commit()
 			callChanged=1
-			whatChanged = whatChanged + "Units "
+			whatChanged = whatChanged + "units "
 		if callChanged==1:  #If the call was changed, update the DB
 			c.execute('UPDATE calls SET dbupdatetime=? where dbid=?', (now, thisCall[0]))
 			db.commit()
 			c.execute('SELECT * FROM calls WHERE dbcalldate=?', (calldate,))
 			call = c.fetchone()
 			print "$" + str(call)
-			return 2, str(call[0]) + "\n" + whatChanged
+			return 2, str(call[0]) + whatChanged
 		else:  #call exists and wasn't updated
 			return 0, str(thisCall[0])
 	else:  #if this call is new
@@ -88,7 +88,7 @@ def sendEmail(footer):
 	msg['From'] = fromaddr
 	msg['To'] = toaddr
 	msg['Subject']= "SDFD: " + calltype + " @ " + address + " with " + str(numunits) + " units"
-	body = calltype + "\n" + address + "\n" + unitids + " (" + str(numunits) + ")\n@" + calldate + "\nhttp://maps.google.com/?q=" + str(lat) + "," + str(long) + "\nCall ID: " + footer
+	body = calltype + "\n" + address + "\n" + unitids + " (" + str(numunits) + ")\n@" + calldate + "\nhttp://maps.google.com/?q=" + str(lat) + "," + str(long) + "\n\n--\nDBID: " + footer
 	msg.attach(MIMEText(body, 'plain'))
 	email = smtplib.SMTP(EMAIL_SERVER, 587)
 	email.ehlo()
@@ -104,8 +104,7 @@ def sendEmail(footer):
 ###Main:
 r = requests.get('https://webapp.pulsepoint.org/active_incidents.php?agencyid=37140&tz=420')
 soup = BeautifulSoup(r.text, 'html.parser')
-footer = "X"
-callDesc = " " 
+#callDesc = " "
 
 for row in soup.findAll("row"):  # Run through each row and pick apart the call details
 	call = row.findAll("cell")
@@ -127,14 +126,11 @@ for row in soup.findAll("row"):  # Run through each row and pick apart the call 
 		if savedType == 1:  #If it is a new call
 			sendTweet(callDesc)
 		if savedType > 0:  #If the call is new or updated
-			if any(word in callDesc for word in COOLCALL):  #Check if it should email
-				sendEmail(savedFooter)
-			elif numunits > 7:  #Check if it should email
+			if numunits > 7 or any(word in callDesc for word in COOLCALL):  #Check if it should email
 				sendEmail(savedFooter)
 		elif savedType < 0:
-		  sendEmail("\nstoreCall() ERROR!!")
+			sendEmail("\nstoreCall() ERROR!!")
 			print "storeCall() ERROR!!"
 			exit()
-
 print "\nFinished."
 exit()
