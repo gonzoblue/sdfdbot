@@ -112,7 +112,7 @@ for row in soup.findAll("row"):  # Run through each row and pick apart the call 
 		calldate = str(call[0].get_text())
 		calltype = str(call[5].get_text())
 		address = str(call[2].get_text())
-		address = address.split(", SAN DIEGO", 1)[0]
+                address = address[0:address.rfind(',')]
 		unitids = BeautifulSoup(call[3].get_text(), 'html.parser')
 		unitids = str(unitids.get_text())
 		unitids = unitids.replace("?", "")
